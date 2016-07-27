@@ -10,6 +10,36 @@ namespace EvictionPolicyDictionary
         {
             LRUTest();
             Console.ReadKey();
+            Console.Clear();
+            PeriodTimeTest();
+            Console.ReadKey();
+        }
+
+        private static async void PeriodTimeTest()
+        {
+            IEvictionPolicy<int, string> dictionary = new TimePeriodDiscardingDictionary<int, string>(TimeSpan.FromSeconds(5));
+
+            dictionary.Add(1, "One");
+            Console.WriteLine("One added");
+            await Task.Delay(1500);
+
+            dictionary.Add(2, "Two");
+            Console.WriteLine("Two added");
+            await Task.Delay(1500);
+
+            dictionary.Add(3, "Three");
+            Console.WriteLine("Three added");
+            await Task.Delay(1500);
+
+            Console.WriteLine("Getting the first one and waiting for 3 seconds. Three and one should be there.");
+            Console.WriteLine(dictionary[1]);
+
+            await Task.Delay(3000);
+            Console.WriteLine("All records in the dictionary:");
+            foreach (var pair in dictionary)
+            {
+                Console.WriteLine($"Key: {pair.Key}, Value: {pair.Value}");
+            }
         }
 
         static async void LRUTest()
@@ -38,7 +68,7 @@ namespace EvictionPolicyDictionary
 
             await Task.Delay(1500);
 
-            Console.WriteLine("Add one more -> First one should stay, third should be deleted");
+            Console.WriteLine("Add one more -> First and seconds should stay, third should be deleted");
             dictionary.Add(4, "Four");
 
             await Task.Delay(1500);
