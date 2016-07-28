@@ -43,6 +43,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Dictionary\BaseDictionary.cs" />
     <Compile Include="Dictionary\IEvictionPolicy.cs" />
     <Compile Include="Dictionary\LeastRecentlyUsedDiscardingDictionary.cs" />
     <Compile Include="Dictionary\TimePeriodDiscardingDictionary.cs" />

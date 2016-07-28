@@ -4,11 +4,10 @@ using System.Linq;
 
 namespace EvictionPolicyDictionary.Dictionary
 {
-    public class LeastRecentlyUsedDiscardingDictionary<TKey, TValue> : IEvictionPolicy<TKey, TValue>
+    public class LeastRecentlyUsedDiscardingDictionary<TKey, TValue> : BaseDictionary<TKey, TValue>
     {
-        private readonly Dictionary<TKey, TValue> _dictionary = new Dictionary<TKey, TValue>(); 
-        private readonly Dictionary<TKey, long> _usingTime = new Dictionary<TKey, long>();
         private readonly int _capacity = 5;
+        private Dictionary<TKey, long> _usingTime = new Dictionary<TKey, long>();
 
         public LeastRecentlyUsedDiscardingDictionary() { }
 
@@ -39,12 +38,7 @@ namespace EvictionPolicyDictionary.Dictionary
             }
         }
 
-        public bool ContainsKey(TKey key)
-        {
-            return _dictionary.Keys.Any(x => x.Equals(key));
-        }
-
-        public void Add(TKey key, TValue value)
+        public override void Add(TKey key, TValue value)
         {
             if (ContainsKey(key))
             {
@@ -55,7 +49,7 @@ namespace EvictionPolicyDictionary.Dictionary
             AddWithTime(key, value);
         }
 
-        public void Add(KeyValuePair<TKey, TValue> item)
+        public override void Add(KeyValuePair<TKey, TValue> item)
         {
             if (ContainsKey(item.Key))
             {
@@ -66,7 +60,7 @@ namespace EvictionPolicyDictionary.Dictionary
             AddWithTime(item.Key, item.Value);
         }
 
-        public bool Remove(TKey key)
+        public override bool Remove(TKey key)
         {
             if (ContainsKey(key))
             {
@@ -77,7 +71,7 @@ namespace EvictionPolicyDictionary.Dictionary
             return false;
         }
 
-        public bool TryGetValue(TKey key, out TValue value)
+        public override bool TryGetValue(TKey key, out TValue value)
         {
             if (ContainsKey(key))
             {
@@ -89,7 +83,7 @@ namespace EvictionPolicyDictionary.Dictionary
             return false;
         }
 
-        public TValue this[TKey key]
+        public override TValue this[TKey key]
         {
             get
             {
@@ -105,7 +99,7 @@ namespace EvictionPolicyDictionary.Dictionary
                 if (ContainsKey(key))
                 {
                     _usingTime[key] = DateTime.Now.Ticks;
-                    _dictionary[key] = value;
+                    base[key] = value;
                 }
                 else
                 {
@@ -114,32 +108,17 @@ namespace EvictionPolicyDictionary.Dictionary
             }
         }
 
-        public ICollection<TKey> Keys => _dictionary.Keys;
-        public ICollection<TValue> Values => _dictionary.Values;
-
-        public IEnumerator<KeyValuePair<TKey, TValue>> GetEnumerator()
+        public override void Clear()
         {
-            return _dictionary.GetEnumerator();
+            _usingTime = new Dictionary<TKey, long>();
+            base.Clear();
         }
 
-        public void Clear()
+        public override bool Remove(KeyValuePair<TKey, TValue> item)
         {
-            foreach (var key in _dictionary.Keys)
+            if (Contains(item))
             {
-                RemoveWithTime(key);
-            }
-        }
-
-        public bool Contains(KeyValuePair<TKey, TValue> item)
-        {
-            return _dictionary.Any(x => x.Key.Equals(item.Key) && x.Value.Equals(item.Value));
-        }
-
-        public bool Remove(KeyValuePair<TKey, TValue> item)
-        {
-            if (_dictionary.Any(x => x.Key.Equals(item.Key) && x.Value.Equals(item)))
-            {
-                var pair = _dictionary.FirstOrDefault(x => x.Key.Equals(item.Key) && x.Value.Equals(item));
+                var pair = Dictionary.FirstOrDefault(x => x.Key.Equals(item.Key) && x.Value.Equals(item));
                 RemoveWithTime(pair.Key);
                 return true;
             }
@@ -147,27 +126,25 @@ namespace EvictionPolicyDictionary.Dictionary
             return false;
         }
 
-        public int Count => _dictionary.Count;
-
         private void AddWithTime(TKey key, TValue value)
         {
-            _dictionary.Add(key, value);
+            base.Add(key, value);
             _usingTime.Add(key, DateTime.Now.Ticks);
         }
 
         private void RemoveWithTime(TKey key)
         {
             _usingTime.Remove(key);
-            _dictionary.Remove(key);
+            base.Remove(key);
         }
 
         private void TryCleanOutOfCapacityValue()
         {
-            if (_dictionary.Keys.Count == _capacity)
+            if (Keys.Count == _capacity)
             {
-                var firstKey = _dictionary.Keys.First();
+                var firstKey = Keys.First();
                 KeyValuePair<TKey, long> pair = new KeyValuePair<TKey, long>(firstKey, _usingTime[firstKey]);
-                foreach (var lapseKey in _dictionary.Keys)
+                foreach (var lapseKey in Keys)
                 {
                     if (_usingTime[lapseKey] < pair.Value)
                     {
@@ -182,7 +159,7 @@ namespace EvictionPolicyDictionary.Dictionary
         private TValue GetValue(TKey key)
         {
             _usingTime[key] = DateTime.Now.Ticks;
-            var value = _dictionary[key];
+            var value = base[key];
             return value;
         }
     }

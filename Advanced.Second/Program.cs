@@ -40,22 +40,24 @@ namespace Advanced.Second
 
         public bool Equals(Item other)
         {
-            return Name == other.Name;
+            return string.Equals(Name, other.Name) && Price == other.Price && Count == other.Count;
         }
 
         public override bool Equals(object obj)
         {
-            if (!(obj is Item))
-            {
-                return false;
-            }
-
-            return Equals((Item)obj);
+            if (ReferenceEquals(null, obj)) return false;
+            return obj is Item && Equals((Item) obj);
         }
 
         public override int GetHashCode()
         {
-            return Name.GetHashCode();
+            unchecked
+            {
+                var hashCode = Name?.GetHashCode() ?? 0;
+                hashCode = (hashCode*397) ^ Price.GetHashCode();
+                hashCode = (hashCode*397) ^ Count;
+                return hashCode;
+            }
         }
     }
 }
