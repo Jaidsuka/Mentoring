@@ -18,7 +18,7 @@ namespace EvictionPolicyDictionary
 
         private static async void PeriodTimeTest()
         {
-            IEvictionPolicy<int, string> dictionary = new TimePeriodDiscardingDictionary<int, string>(TimeSpan.FromSeconds(5));
+            IDictionary<int, string> dictionary = new ExpirableDictionary<int, string>(new TimePeriodDiscardingEvictionPolicy<int, string>(TimeSpan.FromSeconds(5)));
 
             dictionary.Add(1, "One");
             Console.WriteLine("One added");
@@ -45,7 +45,7 @@ namespace EvictionPolicyDictionary
 
         static async void LRUTest()
         {
-            IEvictionPolicy<int, string> dictionary = new LeastRecentlyUsedDiscardingDictionary<int, string>(3);
+            IDictionary<int, string> dictionary = new ExpirableDictionary<int, string>(new LeastRecentlyUsedDiscardingEvictionPolicy<int, string>(3));
 
             dictionary.Add(1, "One");
             Console.WriteLine("One added");
